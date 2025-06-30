@@ -1,52 +1,73 @@
-function registrar(){
-    const usuarioInput = document.getElementById('usuarioIn').value;
-    const passwordInput = document.getElementById('passwordIn').value;
-    const emailInput = document.getElementById('emailIn').value;
-
-
-
-localStorage.setItem('username', usuarioInput)
-localStorage.setItem('password', passwordInput)
-localStorage.setItem('email', emailInput)
-}
-
-function iniciarSesion() {
-    const usuarioInput = document.getElementById('usuarioInput');
-    const passwordInput = document.getElementById('passwordInput');
-
-    const usuario = usuarioInput.value.trim();
-    const password = passwordInput.value.trim();
-
-    const USERNAME = localStorage.getItem("username");
-    const PASSWORD = localStorage.getItem("password");
-
-    if (usuario === USERNAME && password === PASSWORD) {
-        if (window.notificationSystem) {
-            window.notificationSystem.show('Inicio de sesión exitoso', 'success');
+function setupAuth() {
+    window.abrirModalUsuario = () => document.getElementById('modalUsr').style.display = 'block';
+    window.cerrarModalUsuario = () => document.getElementById('modalUsr').style.display = 'none';
+    window.abrirModalReg = () => document.getElementById('modalReg').style.display = 'block';
+    window.cerrarModalReg = () => document.getElementById('modalReg').style.display = 'none';
+    
+    window.registrar = () => {
+        const usuario = document.getElementById('usuarioIn')?.value;
+        const password = document.getElementById('passwordIn')?.value;
+        const email = document.getElementById('emailIn')?.value;
+        
+        if (usuario && password && email) {
+            localStorage.setItem('username', usuario);
+            localStorage.setItem('password', password);
+            localStorage.setItem('email', email);
+            
+            if (window.notificationSystem) {
+                window.notificationSystem.show('Usuario registrado', 'success');
+            } else {
+                alert('Usuario registrado exitosamente');
+            }
+            
+            cerrarModalReg();
+            
+            document.getElementById('usuarioIn').value = '';
+            document.getElementById('passwordIn').value = '';
+            document.getElementById('emailIn').value = '';
         } else {
-            console.warn('notificationSystem no está disponible.');
-            alert('Inicio de sesión exitoso'); 
+            if (window.notificationSystem) {
+                window.notificationSystem.show('Complete todos los campos', 'warning');
+            } else {
+                alert('Complete todos los campos');
+            }
         }
-        cerrarModalUsuario(); 
-        const userIcon = document.querySelector('.user-menu .fa-user-circle');
-        if (userIcon) {
-            userIcon.style.color = 'var(--primary-color)'; 
-        }
-        const userBtn = document.querySelector('.user-menu .usuariosBtn');
-        if (userBtn) {
-            userBtn.textContent = 'Bienvenido, Admin'; 
-            userBtn.onclick = null; 
-            userBtn.style.cursor = 'default';
-        }
-
-    } else {
-        if (window.notificationSystem) {
-            window.notificationSystem.show('Usuario o contraseña incorrectos', 'error');
+    };
+    
+    window.iniciarSesion = () => {
+        const usuario = document.getElementById('usuarioInput')?.value.trim();
+        const password = document.getElementById('passwordInput')?.value.trim();
+        const savedUser = localStorage.getItem('username');
+        const savedPass = localStorage.getItem('password');
+        
+        if (usuario === savedUser && password === savedPass) {
+            if (window.notificationSystem) {
+                window.notificationSystem.show('Sesión iniciada', 'success');
+            } else {
+                alert('Sesión iniciada correctamente');
+            }
+            
+            cerrarModalUsuario();
+            
+            const userIcon = document.querySelector('.user-menu .fa-user-circle');
+            const userBtn = document.querySelector('.user-menu .usuariosBtn');
+            if (userIcon) userIcon.style.color = 'var(--primary-color)';
+            if (userBtn) {
+                userBtn.textContent = `Bienvenido, ${usuario}`;
+                userBtn.onclick = null;
+            }
+            
+            document.getElementById('usuarioInput').value = '';
+            document.getElementById('passwordInput').value = '';
         } else {
-            console.warn('notificationSystem no está disponible.');
-            alert('Usuario o contraseña incorrectos'); 
+            if (window.notificationSystem) {
+                window.notificationSystem.show('Credenciales incorrectas', 'error');
+            } else {
+                alert('Credenciales incorrectas');
+            }
+            
+            document.getElementById('usuarioInput').value = '';
+            document.getElementById('passwordInput').value = '';
         }
-        usuarioInput.value = ''; 
-        passwordInput.value = '';
-    }
+    };
 }
