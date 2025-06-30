@@ -9,7 +9,6 @@ function initializeApp() {
     // setupFileUpload();
     setupAuth(); 
     // setupCalendar();
-    // setupChat();
     loadTables();
     updateStats();
     
