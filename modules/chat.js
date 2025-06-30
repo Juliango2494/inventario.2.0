@@ -1,50 +1,3 @@
-<<<<<<< Updated upstream
-        const chatInput = document.getElementById('chatInput');
-        const chatMessages = document.getElementById('chatMessages');
-        const sendButton = document.getElementById('sendChat');
-
-        function addMessage(message, isUser = false) {
-            const messageDiv = document.createElement('div');
-            messageDiv.style.cssText = `
-                margin-bottom: 1rem;
-                padding: 0.75rem;
-                border-radius: 8px;
-                ${isUser ? 
-                    'background: var(--primary-color); color: white; margin-left: 2rem; text-align: right;' : 
-                    'background: var(--surface); border: 1px solid var(--border); margin-right: 2rem;'
-                }
-            `;
-            messageDiv.textContent = message;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function sendMessage() {
-            const message = chatInput.value.trim();
-            if (message) {
-                addMessage(message, true);
-                chatInput.value = '';
-                
-                setTimeout(() => {
-                    const responses = [
-                        'He analizado tu consulta. Basándome en los datos disponibles, te recomiendo revisar los costos de materiales en el ítem de estructura.',
-                        'Puedo ayudarte con eso. ¿Podrías especificar qué tipo de análisis necesitas: presupuesto, cronograma o materiales?',
-                        'Según mi análisis, detecté una posible optimización en la programación de actividades que podría ahorrarte un 15% en tiempo.',
-                        'Te sugiero revisar los precios de cemento, ya que han aumentado un 8% en el último mes según datos de mercado.'
-                    ];
-                    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                    addMessage(randomResponse);
-                }, 1500);
-            }
-        }
-
-        sendButton.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-=======
 window.setupChat = function() {
     if (typeof window.GoogleGenerativeAI === 'undefined') {
         import('https://esm.run/@google/generative-ai').then(module => {
@@ -125,7 +78,7 @@ Proporciona una respuesta útil y específica relacionada con la gestión de pro
                 chatHistory.push({role: "user", parts: [{text: contextualPrompt}]});
 
                 const chat = model.startChat({
-                    history: chatHistory.slice(-10), 
+                    history: chatHistory.slice(-10), // Keep last 10 exchanges for context
                 });
 
                 const result = await chat.sendMessage(message);
@@ -168,7 +121,6 @@ Proporciona una respuesta útil y específica relacionada con la gestión de pro
                 chatInput.focus();
             }
         }
-
         setTimeout(() => {
             addMessage("¡Hola! Soy tu asistente de IA especializado en **ObraSmart**. Puedo ayudarte con:\n\n• **Análisis de presupuestos** y optimización de costos\n• **Recomendaciones de materiales** y proveedores\n• **Planificación de cronogramas** y gestión de tiempos\n• **Control de inventarios** y logística\n• **Análisis de riesgos** en proyectos de construcción\n\n¿En qué puedo ayudarte hoy?", false);
         }, 1000);
@@ -231,7 +183,6 @@ function initializeBasicChat() {
     chatInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendMessage();
     });
-
     setTimeout(() => {
         addMessage("⚠️ **Modo Sin Conexión**: El asistente de IA no está disponible. Las funciones básicas de ObraSmart están operativas.\n\nPara activar el asistente especializado:\n1. Verifica tu clave API de Google Gemini\n2. Asegúrate de tener conexión a internet\n3. Recarga la página", false);
     }, 500);
@@ -243,4 +194,3 @@ document.addEventListener('DOMContentLoaded', function() {
         window.setupChat();
     }, 500);
 });
->>>>>>> Stashed changes
