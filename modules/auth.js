@@ -13,8 +13,24 @@ function setupAuth() {
             localStorage.setItem('username', usuario);
             localStorage.setItem('password', password);
             localStorage.setItem('email', email);
-            notificationSystem.show('Usuario registrado', 'success');
+            
+            if (window.notificationSystem) {
+                window.notificationSystem.show('Usuario registrado', 'success');
+            } else {
+                alert('Usuario registrado exitosamente');
+            }
+            
             cerrarModalReg();
+            
+            document.getElementById('usuarioIn').value = '';
+            document.getElementById('passwordIn').value = '';
+            document.getElementById('emailIn').value = '';
+        } else {
+            if (window.notificationSystem) {
+                window.notificationSystem.show('Complete todos los campos', 'warning');
+            } else {
+                alert('Complete todos los campos');
+            }
         }
     };
     
@@ -25,18 +41,31 @@ function setupAuth() {
         const savedPass = localStorage.getItem('password');
         
         if (usuario === savedUser && password === savedPass) {
-            notificationSystem.show('Sesión iniciada', 'success');
+            if (window.notificationSystem) {
+                window.notificationSystem.show('Sesión iniciada', 'success');
+            } else {
+                alert('Sesión iniciada correctamente');
+            }
+            
             cerrarModalUsuario();
             
             const userIcon = document.querySelector('.user-menu .fa-user-circle');
             const userBtn = document.querySelector('.user-menu .usuariosBtn');
             if (userIcon) userIcon.style.color = 'var(--primary-color)';
             if (userBtn) {
-                userBtn.textContent = 'Bienvenido, Admin';
+                userBtn.textContent = `Bienvenido, ${usuario}`;
                 userBtn.onclick = null;
             }
+            
+            document.getElementById('usuarioInput').value = '';
+            document.getElementById('passwordInput').value = '';
         } else {
-            notificationSystem.show('Credenciales incorrectas', 'error');
+            if (window.notificationSystem) {
+                window.notificationSystem.show('Credenciales incorrectas', 'error');
+            } else {
+                alert('Credenciales incorrectas');
+            }
+            
             document.getElementById('usuarioInput').value = '';
             document.getElementById('passwordInput').value = '';
         }

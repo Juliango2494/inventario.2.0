@@ -1,24 +1,15 @@
-import { NotificationSystem } from './notification.js';
-import { DataManager } from './data.js';
-import { setupForms } from './form.js';
-import { setupFileUpload } from './uploadFile.js';
-import { setupAuth } from './auth.js';
-import { setupCalendar } from './calendar.js';
-import { setupChat } from './chat.js';
 let notificationSystem, dataManager;
 
-export { loadTables, notificationSystem, dataManager };
-
 function initializeApp() {
-    notificationSystem = new NotificationSystem();
-    dataManager = new DataManager();
+    // notificationSystem = new NotificationSystem();
+    // dataManager = new DataManager();
     
     setupTabs();
-    setupForms();
-    setupFileUpload();
-    setupAuth();
-    setupCalendar();
-    setupChat();
+    // setupForms();
+    // setupFileUpload();
+    setupAuth(); 
+    // setupCalendar();
+    // setupChat();
     loadTables();
     updateStats();
     
@@ -40,6 +31,61 @@ function setupTabs() {
         });
     });
 }
+
+function setupAuth() {
+    window.abrirModalUsuario = () => document.getElementById('modalUsr').style.display = 'block';
+    window.cerrarModalUsuario = () => document.getElementById('modalUsr').style.display = 'none';
+    window.abrirModalReg = () => document.getElementById('modalReg').style.display = 'block';
+    window.cerrarModalReg = () => document.getElementById('modalReg').style.display = 'none';
+    
+    window.registrar = () => {
+        const usuario = document.getElementById('usuarioIn')?.value;
+        const password = document.getElementById('passwordIn')?.value;
+        const email = document.getElementById('emailIn')?.value;
+        
+        if (usuario && password && email) {
+            localStorage.setItem('username', usuario);
+            localStorage.setItem('password', password);
+            localStorage.setItem('email', email);
+            alert('Usuario registrado exitosamente');
+            cerrarModalReg();
+            
+            document.getElementById('usuarioIn').value = '';
+            document.getElementById('passwordIn').value = '';
+            document.getElementById('emailIn').value = '';
+        } else {
+            alert('Complete todos los campos');
+        }
+    };
+    
+    window.iniciarSesion = () => {
+        const usuario = document.getElementById('usuarioInput')?.value.trim();
+        const password = document.getElementById('passwordInput')?.value.trim();
+        const savedUser = localStorage.getItem('username');
+        const savedPass = localStorage.getItem('password');
+        
+        if (usuario === savedUser && password === savedPass) {
+            alert('Sesión iniciada correctamente');
+            cerrarModalUsuario();
+            
+            const userIcon = document.querySelector('.user-menu .fa-user-circle');
+            const userBtn = document.querySelector('.user-menu .usuariosBtn');
+            if (userIcon) userIcon.style.color = 'var(--primary-color)';
+            if (userBtn) {
+                userBtn.textContent = `Bienvenido, ${usuario}`;
+                userBtn.onclick = null;
+            }
+            
+            document.getElementById('usuarioInput').value = '';
+            document.getElementById('passwordInput').value = '';
+        } else {
+            alert('Credenciales incorrectas');
+            document.getElementById('usuarioInput').value = '';
+            document.getElementById('passwordInput').value = '';
+        }
+    };
+}
+
 function loadTables() {
     loadObrasTable();
     loadMaterialesTable();
@@ -51,7 +97,7 @@ function loadObrasTable() {
     const tbody = document.querySelector('#obras tbody');
     if (!tbody) return;
     
-    const obras = dataManager.get('obras');
+    const obras = []; 
     tbody.innerHTML = obras.map(obra => `
         <tr>
             <td>${obra.codigo}</td>
@@ -76,7 +122,7 @@ function loadMaterialesTable() {
     const tbody = document.querySelector('#materiales tbody');
     if (!tbody) return;
     
-    const materiales = dataManager.get('materiales');
+    const materiales = []; // temporal
     tbody.innerHTML = materiales.map(material => `
         <tr>
             <td>${material.codigo}</td>
@@ -98,7 +144,7 @@ function loadArchivosTable() {
     const tbody = document.querySelector('#archivos tbody');
     if (!tbody) return;
     
-    const archivos = dataManager.get('archivos');
+    const archivos = []; // temporal
     tbody.innerHTML = archivos.map(archivo => `
         <tr>
             <td>${archivo.nombre}</td>
@@ -114,12 +160,10 @@ function loadArchivosTable() {
 }
 
 function updateStats() {
-    const obras = dataManager.get('obras');
-    const materiales = dataManager.get('materiales');
     const stats = document.querySelectorAll('.stat-number');
     
-    if (stats[0]) stats[0].textContent = obras.filter(o => o.estado === 'Activa').length;
-    if (stats[1]) stats[1].textContent = materiales.length;
+    if (stats[0]) stats[0].textContent = 0;
+    if (stats[1]) stats[1].textContent = 0;
     if (stats[2]) stats[2].textContent = Math.floor(Math.random() * 15) + 5;
 }
 
