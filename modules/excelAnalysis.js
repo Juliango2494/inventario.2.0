@@ -72,7 +72,7 @@ ${excelTextContent.substring(0, 30000)} // Limita el contenido para evitar exced
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
-
+    
         analysisResultDiv.innerHTML = `<h3>Análisis de la Obra:</h3><p>${text}</p>`;
         analysisResultDiv.classList.remove('hidden');
 
