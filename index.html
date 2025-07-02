@@ -7,13 +7,9 @@
     <title>ObraSmart - Gestión Inteligente de Inventario</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
-    <style>
-
-    </style>
 </head>
 
 <body>
-    <!-- Header -->
     <header class="header">
         <div class="header-content">
             <div class="logo">
@@ -27,7 +23,6 @@
                         <div class="notification-count" id="notificationCount">3</div>
                     </div>
 
-                    <!-- Panel de Notificaciones -->
                     <div class="notification-panel" id="notificationPanel">
                         <div class="notification-header">
                             <div class="notification-title">Notificaciones</div>
@@ -50,8 +45,7 @@
                         </div>
 
                         <div class="notification-list" id="notificationList">
-                            <!-- Las notificaciones se cargarán aquí dinámicamente -->
-                        </div>
+                            </div>
 
                         <div class="notification-footer">
                             <button class="btn-link" id="viewHistory">Ver historial completo</button>
@@ -65,7 +59,6 @@
         </div>
     </header>
 
-    <!-- Navigation -->
     <nav class="nav-container">
         <div class="nav-tabs">
             <button class="nav-tab active" data-tab="inicio">
@@ -95,9 +88,7 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
     <main class="main-content">
-        <!-- Inicio Tab -->
         <div id="inicio" class="tab-content active">
             <div class="welcome-section">
                 <h1 class="welcome-title">Bienvenido a ObraSmart</h1>
@@ -153,7 +144,6 @@
             </div>
         </div>
 
-        <!-- Obras Tab -->
         <div id="obras" class="tab-content">
             <div class="card">
                 <div class="card-header">
@@ -253,7 +243,6 @@
             </div>
         </div>
 
-        <!-- Materiales Tab -->
         <div id="materiales" class="tab-content">
             <div class="card">
                 <div class="card-header">
@@ -342,78 +331,62 @@
             </div>
         </div>
 
-        <!-- Carga de Archivos Tab -->
         <div id="archivos" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="card-title">
-                        <i class="fas fa-file-upload"></i>
-                        Carga de Archivos
-                    </h2>
+            <div class="excel-analysis-container">
+                <h2>Análisis de Obra de Construcción</h2>
+                <p class="description">
+                    Sube un archivo Excel simple con información de tu proyecto de construcción y la Inteligencia Artificial de Gemini lo analizará para ti.
+                </p>
+
+                <div class="file-input-group">
+                    <label for="excelFileForAnalysis">Selecciona tu archivo Excel (.xlsx o .xls):</label>
+                    <input type="file" id="excelFileForAnalysis" accept=".xls,.xlsx">
                 </div>
 
-                <div class="form-grid">
-                    <div class="card">
-                        <h3>Presupuesto</h3>
-                        <div class="upload-area" id="presupuesto-upload">
-                            <i class="fas fa-file-excel upload-icon"></i>
-                            <p>Arrastra aquí tu archivo de presupuesto (Excel/PDF)</p>
-                            <p style="font-size: 0.875rem; color: var(--text-secondary);">
-                                o haz clic para seleccionar
-                            </p>
-                            <input type="file" id="presupuesto-file" style="display: none;" accept=".xlsx,.xls,.pdf">
-                        </div>
-                    </div>
+                <button onclick="analyzeExcel()">Analizar Archivo Excel</button>
 
-                    <div class="card">
-                        <h3>Programación de Actividades</h3>
-                        <div class="upload-area" id="programacion-upload">
-                            <i class="fas fa-file-alt upload-icon"></i>
-                            <p>Arrastra aquí tu cronograma (Excel/PDF)</p>
-                            <p style="font-size: 0.875rem; color: var(--text-secondary);">
-                                o haz clic para seleccionar
-                            </p>
-                            <input type="file" id="programacion-file" style="display: none;" accept=".xlsx,.xls,.pdf">
-                        </div>
-                    </div>
+                <div id="excelLoadingMessage" class="loading hidden">
+                    Leyendo y analizando el Excel con Gemini AI... por favor, espera un momento.
                 </div>
-
-                <div class="card">
-                    <h3>Archivos Cargados</h3>
-                    <div class="table-container">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Nombre del Archivo</th>
-                                    <th>Tipo</th>
-                                    <th>Fecha de Carga</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>presupuesto_torre_central.xlsx</td>
-                                    <td>Presupuesto</td>
-                                    <td>2025-06-08</td>
-                                    <td><span class="badge badge-success">Procesado</span></td>
-                                    <td>
-                                        <button class="btn btn-secondary">
-                                            <i class="fas fa-download"></i>
-                                        </button>
-                                        <button class="btn btn-secondary">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                <div id="excelAnalysisResult" class="hidden">
                     </div>
+
+
+            </div>
+            <div class="card" style="margin-top: 25px;">
+                <h3>Archivos Cargados Recientemente (General)</h3>
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nombre del Archivo</th>
+                                <th>Tipo</th>
+                                <th>Fecha de Carga</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>presupuesto_torre_central.xlsx</td>
+                                <td>Presupuesto</td>
+                                <td>2025-06-08</td>
+                                <td><span class="badge badge-success">Procesado</span></td>
+                                <td>
+                                    <button class="btn btn-secondary">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn btn-secondary">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- IA Tab -->
         <div id="ia" class="tab-content">
             <div class="card">
                 <div class="card-header">
@@ -474,7 +447,6 @@
             </div>
         </div>
 
-        <!-- Calendario Tab -->
         <div id="calendario" class="tab-content">
             <div class="card">
                 <div class="card-header">
@@ -496,8 +468,7 @@
                 </div>
 
                 <div class="calendar-grid" id="calendarGrid">
-                    <!-- El calendario se generará dinámicamente con JavaScript -->
-                </div>
+                    </div>
 
                 <div class="card" style="margin-top: 1.5rem;">
                     <h3>Eventos Próximos</h3>
@@ -547,7 +518,6 @@
                 </button>
             </div>
         </div>
-        <!-- Modal usuarios-->
         <div id="modalUsr" class="modalUsuario">
             <div class="modal-usuario-content">
                 <p class="titulo-modal">INICIO DE SESION</p>
@@ -578,12 +548,12 @@
                 
             </div>
         </div>
+
     </main>
-
-    <script src="https://esm.run/@google/generative-ai" type="module"></script>
-    <script src="./modules/chat.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script type="module" src="https://esm.run/@google/generative-ai"></script>
     <script src="app.js"></script>
-
-</body>
+    <script src="./modules/chat.js"></script>
+    <script type= "module" src="./modules/excelAnalysis.js"></script> </body>
 
 </html>
