@@ -52,23 +52,38 @@ async function analyzeExcel() {
 
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const prompt = `Analiza el siguiente contenido de un documento Excel relacionado con una obra de construcción. El objetivo es proporcionar un análisis conciso y estructurado. Identifica claramente los siguientes puntos:
-- **Tipo de Obra/Proyecto**: ¿Qué tipo de construcción o proyecto se describe (ej., renovación, edificación nueva, infraestructura)?
-- **Fases/Etapas Clave**: ¿Se mencionan fases específicas de la construcción (ej., demolición, cimientos, estructura, acabados)?
-- **Materiales/Equipos**: ¿Qué materiales o equipos son destacados?
-- **Costos/Presupuesto**: Si se mencionan números o estimaciones de costos, ¿cuáles son? (Menciona si son valores totales, por item, etc.)
-- **Plazos/Cronogramas**: ¿Hay alguna indicación de fechas, duraciones o hitos importantes?
-- **Recursos Humanos**: ¿Se mencionan roles, equipos de trabajo, o cantidad de personal?
-- **Posibles Riesgos/Desafíos**: ¿Se identifican posibles obstáculos o problemas?
-- **Información Adicional Relevante**: Cualquier otro dato importante que resalte el documento para el contexto de una obra.
+const prompt = `Como experto en construcción y gestión de proyectos, analiza este archivo Excel y proporciona:
 
-Formatea tu respuesta de manera legible, usando listas o párrafos claros para cada punto. Si alguna información no está presente en el texto, indícalo explícitamente (ej., "Costos: No especificados en el documento."). Sé lo más específico posible basándote en los datos proporcionados.
+1. **Resumen del Proyecto**:
+   - Tipo de construcción (residencial, comercial, industrial, etc.)
+   - Área aproximada (si se puede deducir)
+   - Etapas principales identificadas
 
-Contenido del documento Excel:
+2. **Análisis de Materiales**:
+   - Lista de materiales principales con cantidades
+   - Costos estimados por categoría (estructura, acabados, instalaciones)
+   - Posibles optimizaciones de materiales
+
+3. **Cronograma y Plazos**:
+   - Duración total estimada
+   - Hitos clave
+   - Posibles cuellos de botella
+
+4. **Recomendaciones**:
+   - Sugerencias para reducir costos
+   - Alternativas de materiales
+   - Optimización de tiempos
+
+Formato de respuesta:
+- Usa encabezados claros para cada sección
+- Destaca números importantes en **negrita**
+- Proporciona datos concretos cuando sea posible
+- Si falta información, indícalo claramente
+
+Contenido del Excel:
 """
-${excelTextContent.substring(0, 30000)} // Limita el contenido para evitar exceder límites de tokens de Gemini
-"""
-`;
+${excelTextContent.substring(0, 30000)}
+"""`;
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
