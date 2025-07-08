@@ -1,20 +1,19 @@
-
-import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai"; 
-
+import { GoogleGenerativeAI } from "https://esm.run/@google/generative-ai";
 
 const API_KEY = "AIzaSyC-eZMGzq9WwTtKC6_8R4cOme1mMhMgnMw"; 
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 async function analyzeExcel() {
-    const fileInput = document.getElementById('excelFileForAnalysis'); 
+    const fileInput = document.getElementById('excelFileForAnalysis');
     const analysisResultDiv = document.getElementById('excelAnalysisResult');
-    const loadingMessage = document.getElementById('excelLoadingMessage'); 
+    const loadingMessage = document.getElementById('excelLoadingMessage');
     const file = fileInput.files[0];
 
     analysisResultDiv.innerHTML = '';
     analysisResultDiv.classList.add('hidden');
     loadingMessage.classList.remove('hidden');
+    loadingMessage.textContent = 'Cargando archivo...'; 
 
     if (!file) {
         analysisResultDiv.innerHTML = '<p class="error-message">Por favor, selecciona un archivo Excel para analizar.</p>';
@@ -31,11 +30,22 @@ async function analyzeExcel() {
         return;
     }
 
+    const MAX_FILE_SIZE_MB = 10; 
+    const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024; 
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+        analysisResultDiv.innerHTML = `<p class="error-message">El archivo excede el tamaño máximo permitido de ${MAX_FILE_SIZE_MB} MB.</p>`;
+        analysisResultDiv.classList.remove('hidden');
+        loadingMessage.classList.add('hidden');
+        return;
+    }
+
     let excelTextContent = '';
 
     try {
-        const data = await file.arrayBuffer(); 
-        const workbook = XLSX.read(data, { type: 'array' }); 
+        loadingMessage.textContent = 'Leyendo contenido del archivo...'; 
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
 
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
@@ -50,9 +60,11 @@ async function analyzeExcel() {
 
         console.log("Contenido extraído del Excel (primeras 500 caracteres):", excelTextContent.substring(0, 500));
 
+        loadingMessage.textContent = 'Analizando con IA... Esto puede tomar un momento.'; 
+
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-const prompt = `Como experto en construcción y gestión de proyectos, analiza este archivo Excel y proporciona:
+        const prompt = `Como experto en construcción y gestión de proyectos, analiza este archivo Excel y proporciona:
 
 1. **Resumen del Proyecto**:
    - Tipo de construcción (residencial, comercial, industrial, etc.)
@@ -87,7 +99,7 @@ ${excelTextContent.substring(0, 30000)}
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
-    
+
         analysisResultDiv.innerHTML = `<h3>Análisis de la Obra:</h3><p>${text}</p>`;
         analysisResultDiv.classList.remove('hidden');
 

@@ -22,12 +22,18 @@
     th {
       background-color: #eee;
     }
+    .loading-message {
+      font-style: italic;
+      color: #888;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Subir Presupuesto de Obra (.xlsx)</h1>
-  <input type="file" id="input-excel" accept=".xlsx, .xls" />
+  <h1>Visualización de Presupuesto de Obra</h1>
+  <p id="fileNameDisplay"></p>
+  <p id="statusMessage" class="loading-message">Cargando documento...</p>
 
   <table id="presupuesto-table">
     <thead>
@@ -44,41 +50,94 @@
   </table>
 
   <script>
-    document.getElementById('input-excel').addEventListener('change', handleFile, false);
+    document.addEventListener('DOMContentLoaded', function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const fileId = urlParams.get('fileId');
+      const statusMessageElement = document.getElementById('statusMessage');
+      const fileNameDisplayElement = document.getElementById('fileNameDisplay');
+      const tbody = document.querySelector("#presupuesto-table tbody");
 
-    function handleFile(event) {
-      const file = event.target.files[0];
-      const reader = new FileReader();
+      if (fileId) {
+        const fileContent = sessionStorage.getItem(`fileContent_${fileId}`);
+        if (fileContent) {
+          try {
+            let fileName = 'Documento Excel';
+            // Attempt to get the file name from the opener's dataManager if available
+            if (window.opener && window.opener.dataManager) {
+                const files = window.opener.dataManager.get('archivos');
+                const file = files.find(f => f.id === fileId);
+                if (file) {
+                    fileName = file.nombre;
+                }
+            }
+            fileNameDisplayElement.textContent = `Archivo: ${fileName}`;
 
-      reader.onload = function (e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+            // Decode Base64 string back to ArrayBuffer
+            const binary_string = atob(fileContent);
+            const len = binary_string.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            const dataArrayBuffer = bytes.buffer;
 
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+            const workbook = XLSX.read(dataArrayBuffer, { type: 'array' });
 
-        renderTable(jsonData);
-      };
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
-      reader.readAsArrayBuffer(file);
-    }
+            renderTable(jsonData);
+            statusMessageElement.textContent = 'Documento cargado correctamente.';
+            statusMessageElement.style.color = 'green';
+
+          } catch (error) {
+            console.error("Error al procesar el archivo Excel:", error);
+            statusMessageElement.textContent = 'Error al cargar o procesar el documento.';
+            statusMessageElement.style.color = 'red';
+            tbody.innerHTML = '<tr><td colspan="6">No se pudo cargar el contenido del archivo.</td></tr>';
+          }
+        } else {
+          statusMessageElement.textContent = 'No se encontró el contenido del archivo en la sesión. Por favor, suba el archivo nuevamente desde la página principal.';
+          statusMessageElement.style.color = 'orange';
+          tbody.innerHTML = '<tr><td colspan="6">No se encontró contenido.</td></tr>';
+        }
+      } else {
+        statusMessageElement.textContent = 'ID de archivo no especificado en la URL.';
+        statusMessageElement.style.color = 'red';
+        tbody.innerHTML = '<tr><td colspan="6">No se encontró contenido.</td></tr>';
+      }
+    });
 
     function renderTable(data) {
       const tbody = document.querySelector("#presupuesto-table tbody");
       tbody.innerHTML = ""; // Limpiar tabla anterior
 
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6">El archivo Excel está vacío o no contiene datos válidos.</td></tr>';
+        return;
+      }
+
       data.forEach((row, index) => {
         const tr = document.createElement("tr");
 
-        // Puedes ajustar aquí según los encabezados reales del archivo Excel
+        // Adjust column names based on your expected Excel headers.
+        // It's common to have variations like "Item", "ITEM", "item".
+        const getItem = (obj) => obj.Item || obj.ITEM || obj.item || "";
+        const getName = (obj) => obj.Nombre || obj.NOMBRE || obj.name || "";
+        const getUnidad = (obj) => obj.Unidad || obj.UNIDAD || obj.unidad || "";
+        const getCantidad = (obj) => obj.Cantidad || obj.CANTIDAD || obj.cantidad || "";
+        const getPrecioUnitario = (obj) => obj["Precio Unitario"] || obj["PRECIO UNITARIO"] || obj.precioUnitario || "";
+        const getPrecioTotal = (obj) => obj["Precio Total"] || obj["PRECIO TOTAL"] || obj.precioTotal || "";
+
+
         tr.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${row.Nombre || row.Item || ""}</td>
-          <td>${row.Unidad || ""}</td>
-          <td>${row.Cantidad || ""}</td>
-          <td>${row["Precio Unitario"] || ""}</td>
-          <td>${row["Precio Total"] || ""}</td>
+          <td>${getItem(row)}</td>
+          <td>${getName(row)}</td>
+          <td>${getUnidad(row)}</td>
+          <td>${getCantidad(row)}</td>
+          <td>${getPrecioUnitario(row)}</td>
+          <td>${getPrecioTotal(row)}</td>
         `;
 
         tbody.appendChild(tr);

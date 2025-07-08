@@ -4,6 +4,14 @@ function setupAuth() {
     window.abrirModalReg = () => document.getElementById('modalReg').style.display = 'block';
     window.cerrarModalReg = () => document.getElementById('modalReg').style.display = 'none';
 
+    const showAppNotification = (message, type) => {
+        if (window.notificationSystem) {
+            window.notificationSystem.show(message, type);
+        } else {
+            alert(message);
+        }
+    };
+
     async function hashString(str) {
         const textEncoder = new TextEncoder();
         const data = textEncoder.encode(str);
@@ -14,53 +22,88 @@ function setupAuth() {
     }
 
     window.registrar = async () => {
-        const usuario = document.getElementById('usuarioIn')?.value;
-        const password = document.getElementById('passwordIn')?.value;
-        const email = document.getElementById('emailIn')?.value;
+        const usuarioInput = document.getElementById('usuarioIn');
+        const passwordInput = document.getElementById('passwordIn');
+        const emailInput = document.getElementById('emailIn');
+        const registerButton = document.querySelector('.modal-registro button[onclick="registrar()"]'); 
+        const usuario = usuarioInput?.value.trim();
+        const password = passwordInput?.value.trim();
+        const email = emailInput?.value.trim();
 
-        if (usuario && password && email) {
-            const hashedPassword = await hashString(password); 
+        if (!usuario || !password || !email) {
+            showAppNotification('Complete todos los campos', 'warning');
+            return;
+        }
+
+        const emailRegex = /\S+@\S+\.\S+/;
+        if (!emailRegex.test(email)) {
+            showAppNotification('Ingrese un formato de correo electrónico válido', 'warning');
+            return;
+        }
+
+        if (password.length < 6) { 
+            showAppNotification('La contraseña debe tener al menos 6 caracteres', 'warning');
+            return;
+        }
+
+        if (registerButton) {
+            registerButton.disabled = true;
+            registerButton.textContent = 'Registrando...';
+            registerButton.style.cursor = 'wait';
+        }
+
+        try {
+            const hashedPassword = await hashString(password);
 
             localStorage.setItem('username', usuario);
-            localStorage.setItem('password', hashedPassword); 
+            localStorage.setItem('password', hashedPassword);
             localStorage.setItem('email', email);
 
-            if (window.notificationSystem) {
-                window.notificationSystem.show('Usuario registrado', 'success');
-            } else {
-                alert('Usuario registrado exitosamente');
-            }
-
+            showAppNotification('Usuario registrado exitosamente', 'success');
             cerrarModalReg();
 
-            document.getElementById('usuarioIn').value = '';
-            document.getElementById('passwordIn').value = '';
-            document.getElementById('emailIn').value = '';
-        } else {
-            if (window.notificationSystem) {
-                window.notificationSystem.show('Complete todos los campos', 'warning');
-            } else {
-                alert('Complete todos los campos');
+            usuarioInput.value = '';
+            passwordInput.value = '';
+            emailInput.value = '';
+        } catch (error) {
+            console.error('Error during registration:', error);
+            showAppNotification('Error al registrar usuario. Intente de nuevo.', 'error');
+        } finally {
+            if (registerButton) {
+                registerButton.disabled = false;
+                registerButton.textContent = 'Registrarse';
+                registerButton.style.cursor = 'pointer';
             }
         }
     };
 
-    window.iniciarSesion = async () => { 
-        const usuario = document.getElementById('usuarioInput')?.value.trim();
-        const password = document.getElementById('passwordInput')?.value.trim();
+    window.iniciarSesion = async () => {
+        const usuarioInput = document.getElementById('usuarioInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginButton = document.querySelector('.modal-content button[onclick="iniciarSesion()"]'); 
+
+        const usuario = usuarioInput?.value.trim();
+        const password = passwordInput?.value.trim();
+
         const savedUser = localStorage.getItem('username');
-        const savedPassHash = localStorage.getItem('password'); 
+        const savedPassHash = localStorage.getItem('password');
 
-        if (usuario && password) {
-            const enteredPasswordHash = await hashString(password); 
+        if (!usuario || !password) {
+            showAppNotification('Complete todos los campos', 'warning');
+            return;
+        }
 
-            if (usuario === savedUser && enteredPasswordHash === savedPassHash) { 
-                if (window.notificationSystem) {
-                    window.notificationSystem.show('Sesión iniciada', 'success');
-                } else {
-                    alert('Sesión iniciada correctamente');
-                }
+        if (loginButton) {
+            loginButton.disabled = true;
+            loginButton.textContent = 'Iniciando...';
+            loginButton.style.cursor = 'wait';
+        }
 
+        try {
+            const enteredPasswordHash = await hashString(password);
+
+            if (usuario === savedUser && enteredPasswordHash === savedPassHash) {
+                showAppNotification('Sesión iniciada correctamente', 'success');
                 cerrarModalUsuario();
 
                 const userIcon = document.querySelector('.user-menu .fa-user-circle');
@@ -68,26 +111,24 @@ function setupAuth() {
                 if (userIcon) userIcon.style.color = 'var(--primary-color)';
                 if (userBtn) {
                     userBtn.textContent = `Bienvenido, ${usuario}`;
-                    userBtn.onclick = null;
+                    userBtn.onclick = null; 
                 }
 
-                document.getElementById('usuarioInput').value = '';
-                document.getElementById('passwordInput').value = '';
+                usuarioInput.value = '';
+                passwordInput.value = '';
             } else {
-                if (window.notificationSystem) {
-                    window.notificationSystem.show('Credenciales incorrectas', 'error');
-                } else {
-                    alert('Credenciales incorrectas');
-                }
-
-                document.getElementById('usuarioInput').value = '';
-                document.getElementById('passwordInput').value = '';
+                showAppNotification('Credenciales incorrectas', 'error');
+                usuarioInput.value = '';
+                passwordInput.value = '';
             }
-        } else {
-             if (window.notificationSystem) {
-                window.notificationSystem.show('Complete todos los campos', 'warning');
-            } else {
-                alert('Complete todos los campos');
+        } catch (error) {
+            console.error('Error during login:', error);
+            showAppNotification('Error al iniciar sesión. Intente de nuevo.', 'error');
+        } finally {
+            if (loginButton) {
+                loginButton.disabled = false;
+                loginButton.textContent = 'Iniciar Sesión';
+                loginButton.style.cursor = 'pointer';
             }
         }
     };
