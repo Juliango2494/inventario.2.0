@@ -62,10 +62,10 @@
             </div>
           </div>
           <i class="fas fa-user-circle" style="font-size: 1.5rem"></i>
-          <button class="usuariosBtn" onclick="abrirModalUsuario()">
+          <button class="btn" onclick="abrirModalUsuario()">
             Iniciar Sesion
           </button>
-          <button class="usuariosBtn" onclick="abrirModalReg()">
+          <button class="btn" onclick="abrirModalReg()">
             Registrarse
           </button>
         </div>
@@ -179,8 +179,7 @@
               <label class="form-label">Obra</label>
               <select class="form-input" id="obra-select">
                 <option value="">Seleccionar obra</option>
-                <!-- Options will be populated by JS -->
-              </select>
+                </select>
             </div>
             <div class="form-group">
               <label class="form-label">Nombre de la Actividad</label>
@@ -438,6 +437,36 @@
       </div>
 
       <div id="archivos" class="tab-content">
+        <div class="upload-section">
+          <h3>Cargar Archivos de Proyecto</h3>
+          <p class="description">
+            Sube tus archivos de proyecto aquí. Se admiten formatos PDF, DOCX, XLSX y JPG, con un tamaño máximo de 5MB por archivo.
+          </p>
+          <div class="upload-grid">
+            <div class="upload-area" id="presupuesto-upload">
+              <input type="file" id="fileInputPresupuesto" accept=".xlsx,.xls" />
+              <i class="fas fa-file-excel upload-icon"></i>
+              <p>Arrastra tu presupuesto o haz clic para subir</p>
+              <small>(Solo archivos .xlsx, .xls - máx 5MB)</small>
+              <div class="upload-feedback" id="feedbackPresupuesto"></div>
+            </div>
+            <div class="upload-area" id="programacion-upload">
+              <input type="file" id="fileInputProgramacion" accept=".pdf,.docx" />
+              <i class="fas fa-file-alt upload-icon"></i>
+              <p>Arrastra tu programación o haz clic para subir</p>
+              <small>(Solo archivos .pdf, .docx - máx 5MB)</small>
+              <div class="upload-feedback" id="feedbackProgramacion"></div>
+            </div>
+            <div class="upload-area" id="documento-upload">
+              <input type="file" id="fileInputDocumento" accept=".pdf,.docx,.xlsx,.xls,.jpg" />
+              <i class="fas fa-folder-open upload-icon"></i>
+              <p>Arrastra otros documentos o haz clic para subir</p>
+              <small>(PDF, DOCX, XLSX, JPG - máx 5MB)</small>
+              <div class="upload-feedback" id="feedbackDocumento"></div>
+            </div>
+          </div>
+        </div>
+
         <div class="excel-analysis-container">
           <h2>Análisis de Obra de Construcción</h2>
           <p class="description">
@@ -474,7 +503,7 @@
                   <th>Acciones</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody id="uploadedFilesTableBody">
                 <tr>
                   <td>presupuesto_torre_central.xlsx</td>
                   <td>Presupuesto</td>

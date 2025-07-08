@@ -1,79 +1,101 @@
+
+
 function setupCalendar() {
     const calendarGrid = document.getElementById('calendarGrid');
     const currentMonthElement = document.getElementById('currentMonth');
     if (!calendarGrid || !currentMonthElement) return;
-    
+
     let currentDate = new Date();
     const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+
+    const parseDate = (dateString) => {
+        if (!dateString || typeof dateString !== 'string') return null;
+        const parts = dateString.split('-');
+        if (parts.length !== 3) return null;
+        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+        if (isNaN(date.getTime())) return null;
+        date.setHours(0, 0, 0, 0);
+        return date;
+    };
+
     function generateCalendar() {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const today = new Date();
-        
-        currentMonthElement.textContent = `${months[month]} ${year}`;
-        calendarGrid.innerHTML = '';
-        
-        // Headers
-        ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
-            const dayElement = document.createElement('div');
-            dayElement.style.cssText = 'background: var(--primary-color); color: white; padding: 0.5rem; text-align: center; font-weight: bold;';
-            dayElement.textContent = day;
-            calendarGrid.appendChild(dayElement);
-        });
-        
-        // Days
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
-        // Previous month days
-        for (let i = firstDay - 1; i >= 0; i--) {
-            const dayElement = document.createElement('div');
-            dayElement.className = 'calendar-day other-month';
-            dayElement.textContent = new Date(year, month, 0).getDate() - i;
-            calendarGrid.appendChild(dayElement);
-        }
-        
-        // Current month days
-        for (let day = 1; day <= daysInMonth; day++) {
-            const dayElement = document.createElement('div');
-            dayElement.className = 'calendar-day';
-            
-            if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
-                dayElement.classList.add('today');
+        try {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            currentMonthElement.textContent = `${months[month]} ${year}`;
+            calendarGrid.innerHTML = '';
+
+            const activities = window.dataManager ? window.dataManager.get('actividades') : [];
+
+            ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].forEach(day => {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-header';
+                dayElement.textContent = day;
+                calendarGrid.appendChild(dayElement);
+            });
+
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day other-month';
+                calendarGrid.appendChild(dayElement);
             }
-            
-            dayElement.innerHTML = `<strong>${day}</strong>`;
-            
-            // Add events
-            if (day === 12) dayElement.innerHTML += '<br>📦 Entrega';
-            if (day === 15) dayElement.innerHTML += '<br>🔍 Inspección';
-            if (day === 20) dayElement.innerHTML += '<br>📋 Reunión';
-            
-            calendarGrid.appendChild(dayElement);
-        }
-        
-        // Next month days
-        const totalCells = 42;
-        const cellsUsed = firstDay + daysInMonth;
-        for (let day = 1; cellsUsed + day - 1 < totalCells; day++) {
-            const dayElement = document.createElement('div');
-            dayElement.className = 'calendar-day other-month';
-            dayElement.textContent = day;
-            calendarGrid.appendChild(dayElement);
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                const dayDate = new Date(year, month, day);
+
+                if (dayDate.getTime() === today.getTime()) {
+                    dayElement.classList.add('today');
+                }
+
+                const dayNumber = document.createElement('strong');
+                dayNumber.textContent = day;
+                dayElement.appendChild(dayNumber);
+
+                const dayEvents = activities.filter(act => {
+                    const startDate = parseDate(act.fechaInicio);
+                    const endDate = parseDate(act.fechaFin);
+                    return startDate && endDate && dayDate >= startDate && dayDate <= endDate;
+                });
+
+                if (dayEvents.length > 0) {
+                    const eventsContainer = document.createElement('div');
+                    eventsContainer.className = 'calendar-events';
+                    dayEvents.forEach(event => {
+                        const eventElement = document.createElement('div');
+                        eventElement.className = 'calendar-event';
+                        eventElement.textContent = event.nombre;
+                        eventElement.title = event.nombre;
+                        eventsContainer.appendChild(eventElement);
+                    });
+                    dayElement.appendChild(eventsContainer);
+                }
+                calendarGrid.appendChild(dayElement);
+            }
+        } catch (error) {
+            console.error("Error al generar el calendario:", error);
+            calendarGrid.innerHTML = '<p class="error-message">Error al cargar el calendario. Verifique los datos de las actividades.</p>';
         }
     }
-    
+
     document.getElementById('prevMonth')?.addEventListener('click', () => {
         currentDate.setMonth(currentDate.getMonth() - 1);
         generateCalendar();
     });
-    
+
     document.getElementById('nextMonth')?.addEventListener('click', () => {
         currentDate.setMonth(currentDate.getMonth() + 1);
         generateCalendar();
     });
-    
+
     generateCalendar();
 }

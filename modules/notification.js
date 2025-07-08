@@ -1,41 +1,52 @@
 class NotificationSystem {
     constructor() {
         this.createContainer();
+        // Bind event listeners if needed for advanced interaction, e.g., closing
     }
-    
+
     createContainer() {
         if (document.getElementById('notification-container')) return;
+
         const container = document.createElement('div');
         container.id = 'notification-container';
-        container.style.cssText = `
-            position: fixed; top: 80px; right: 20px; z-index: 1000;
-            max-width: 350px; pointer-events: none;
-        `;
+        container.setAttribute('aria-live', 'polite'); // Announce changes politely
+        container.setAttribute('aria-atomic', 'true'); // Announce the entire region as a whole
+        container.classList.add('notification-container'); // Apply CSS class for styling
+
         document.body.appendChild(container);
     }
-    
-    show(message, type = 'info') {
+
+    /**
+     * Shows a notification message.
+     * @param {string} message The message to display.
+     * @param {string} type The type of notification (success, warning, error, info).
+     * @param {number} duration The duration in milliseconds before the notification is removed.
+     */
+    show(message, type = 'info', duration = 4000) {
         const notification = document.createElement('div');
-        const colors = {
-            success: '#10b981',
-            warning: '#f59e0b', 
-            error: '#ef4444',
-            info: '#2563eb'
-        };
-        
-        notification.style.cssText = `
-            background: ${colors[type]}; color: white; padding: 1rem;
-            border-radius: 8px; margin-bottom: 0.5rem;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transform: translateX(100%); transition: transform 0.3s ease;
-            pointer-events: auto; font-size: 0.9rem;
-        `;
+        notification.classList.add('notification-item');
+        notification.classList.add(`notification-item--${type}`);
+        notification.setAttribute('role', 'status'); // For screen readers to announce it as a status update
         notification.textContent = message;
-        
+
         const container = document.getElementById('notification-container');
+        if (!container) {
+            console.error("Notification container not found. Call createContainer() first.");
+            return;
+        }
         container.appendChild(notification);
-        
-        setTimeout(() => notification.style.transform = 'translateX(0)', 10);
-        setTimeout(() => notification.remove(), 4000);
+
+        // Animate in
+        requestAnimationFrame(() => {
+            notification.style.transform = 'translateX(0)';
+            notification.style.opacity = '1';
+        });
+
+        // Auto-remove after duration
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            notification.style.opacity = '0';
+            notification.addEventListener('transitionend', () => notification.remove(), { once: true });
+        }, duration);
     }
 }

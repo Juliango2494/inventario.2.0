@@ -1,50 +1,163 @@
 let notificationSystem, dataManager;
 
+/**
+ * Inicializa la aplicación con manejo robusto de errores y dependencias
+ */
 function initializeApp() {
-  if (
-    typeof DataManager === "undefined" ||
-    typeof NotificationSystem === "undefined"
-  ) {
-    console.error("Dependencias no cargadas! Reintentando...");
-    setTimeout(initializeApp, 100);
-    return;
+  const MAX_RETRIES = 10;
+  let retryCount = 0;
+
+  /**
+   * Verifica si las dependencias están cargadas
+   */
+  function checkDependencies() {
+    if (typeof DataManager === "undefined" || typeof NotificationSystem === "undefined") {
+      if (retryCount < MAX_RETRIES) {
+        retryCount++;
+        console.warn(`Dependencias no cargadas! Reintentando... (${retryCount}/${MAX_RETRIES})`);
+        setTimeout(checkDependencies, 300);
+        return;
+      }
+      console.error("Dependencias no cargadas después de varios intentos. Cargando modo seguro...");
+      loadSafeMode();
+      return;
+    }
+    startApplication();
   }
 
-  try {
-    dataManager = new DataManager();
-    notificationSystem = new NotificationSystem();
+  /**
+   * Carga funcionalidades básicas cuando fallan las dependencias principales
+   */
+  function loadSafeMode() {
+    console.log("Cargando funcionalidades básicas...");
+    try {
+      setupBasicTabs();
+      setupBasicForms();
+      showAlert("Algunas funciones pueden estar limitadas. Recargue la página si el problema persiste.", "warning");
+    } catch (error) {
+      console.error("Error en modo seguro:", error);
+      showAlert("Error crítico en la aplicación. Contacte al soporte técnico.", "error");
+    }
+  }
 
-    window.dataManager = window.dataManager || dataManager;
-    window.notificationSystem = window.notificationSystem || notificationSystem;
+  /**
+   * Inicia la aplicación con todas las funcionalidades
+   */
+  function startApplication() {
+    try {
+      // Inicializar componentes principales
+      dataManager = new DataManager();
+      notificationSystem = new NotificationSystem();
 
-    setupTabs();
-    setupForms();
-    setupFileUpload();
-    setupAuth();
-    setupCalendar();
-    setupChat();
-    setupGantt();
-    setupQuickActions();
-    document.querySelectorAll(".btn-edit-actividad").forEach((btn) => {
-      btn.addEventListener("click", function () {
-        const actividadId = this.getAttribute("data-id");
-        editActividad(actividadId);
+      // Hacer disponibles globalmente si no existen
+      window.dataManager = window.dataManager || dataManager;
+      window.notificationSystem = window.notificationSystem || notificationSystem;
+
+      // Inicializar módulos
+      const modules = [
+        { name: 'Tabs', func: setupTabs },
+        { name: 'Forms', func: setupForms },
+        { name: 'File Upload', func: setupFileUpload },
+        { name: 'Auth', func: setupAuth },
+        { name: 'Calendar', func: setupCalendar },
+        { name: 'Chat', func: setupChat },
+        { name: 'Gantt', func: setupGantt },
+        { name: 'Quick Actions', func: setupQuickActions }
+      ];
+
+      modules.forEach(module => {
+        try {
+          module.func();
+          console.log(`Módulo ${module.name} inicializado correctamente`);
+        } catch (error) {
+          console.error(`Error inicializando módulo ${module.name}:`, error);
+          if (notificationSystem) {
+            notificationSystem.show(`Error en módulo ${module.name}. Algunas funciones pueden no estar disponibles.`, "warning");
+          }
+        }
+      });
+
+      // Configurar eventos de botones
+      document.querySelectorAll(".btn-edit-actividad").forEach((btn) => {
+        btn.addEventListener("click", function() {
+          const actividadId = this.getAttribute("data-id");
+          editActividad(actividadId);
+        });
+      });
+
+      // Cargar datos iniciales
+      if (dataManager && typeof dataManager.get === "function") {
+        loadTables();
+        updateStats();
+        console.log("Aplicación inicializada correctamente");
+      } else {
+        throw new Error("DataManager no funciona correctamente");
+      }
+    } catch (error) {
+      console.error("Error al inicializar la aplicación:", error);
+      if (notificationSystem) {
+        notificationSystem.show("Error al inicializar la aplicación", "error");
+      }
+      loadSafeMode();
+    }
+  }
+
+  // Versión básica de setupTabs para modo seguro
+  function setupBasicTabs() {
+    document.querySelectorAll(".nav-tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const targetTab = tab.getAttribute("data-tab");
+        document.querySelectorAll(".nav-tab").forEach((t) => t.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(targetTab).classList.add("active");
       });
     });
-    if (dataManager && typeof dataManager.get === "function") {
-      loadTables();
-      updateStats();
-      console.log("Aplicación inicializada correctamente");
+  }
+
+  checkDependencies();
+}
+
+/**
+ * Muestra una alerta/notificación al usuario
+ */
+window.showAlert = function(message, type = "info") {
+  try {
+    if (window.notificationSystem) {
+      window.notificationSystem.show(message, type);
     } else {
-      console.error("Error: DataManager no funciona correctamente");
-      throw new Error("DataManager no funciona correctamente");
+      // Fallback básico
+      const alertDiv = document.createElement('div');
+      alertDiv.style.cssText = `
+        position: fixed; top: 20px; right: 20px; 
+        padding: 15px; background: ${getColorForType(type)}; 
+        color: white; border-radius: 5px; z-index: 1000;
+      `;
+      alertDiv.textContent = `${type.toUpperCase()}: ${message}`;
+      document.body.appendChild(alertDiv);
+      setTimeout(() => alertDiv.remove(), 5000);
     }
   } catch (error) {
-    console.error("Error al inicializar la aplicación:", error);
-    if (notificationSystem) {
-      notificationSystem.show("Error al inicializar la aplicación", "error");
-    }
+    console.error("Error mostrando alerta:", error);
+    alert(`${type.toUpperCase()}: ${message}`);
   }
+
+  function getColorForType(type) {
+    const colors = {
+      error: '#ef4444',
+      warning: '#f59e0b',
+      success: '#10b981',
+      info: '#3b82f6'
+    };
+    return colors[type] || colors.info;
+  }
+};
+
+// Inicialización de la aplicación
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeApp);
+} else {
+  initializeApp();
 }
 
 window.showAlert = function (message, type) {
