@@ -9,6 +9,160 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./style.css" />
+    <style>
+      /* New styles for the upload and files table sections */
+      body {
+        --primary-color: #007bff;
+        --accent-color: #28a745;
+        --error-color: #dc3545;
+        --border: #ccc;
+        --text-secondary: #6c757d;
+      }
+      .upload-section {
+        margin-bottom: 30px;
+      }
+      .upload-grid {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .upload-area {
+        flex: 1;
+        min-width: 280px;
+        border: 2px dashed var(--border);
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      .upload-area:hover,
+      .upload-area.dragover {
+        border-color: var(--primary-color);
+        background-color: #e9f5ff;
+      }
+      .upload-area input[type="file"] {
+        display: none;
+      }
+      .upload-icon {
+        font-size: 3em;
+        color: var(--text-secondary);
+        margin-bottom: 10px;
+        transition: color 0.3s ease;
+      }
+      .upload-area p {
+        margin: 0;
+        color: #555;
+        font-size: 0.9em;
+      }
+      .upload-feedback {
+        font-size: 0.8em;
+        margin-top: 10px;
+        padding: 5px;
+        border-radius: 4px;
+        visibility: hidden;
+        opacity: 0;
+        transition: all 0.3s ease;
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .upload-feedback.success {
+        background-color: #d4edda;
+        color: #155724;
+        visibility: visible;
+        opacity: 1;
+      }
+      .upload-feedback.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        visibility: visible;
+        opacity: 1;
+      }
+      .upload-feedback.info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        visibility: visible;
+        opacity: 1;
+      }
+      .upload-area.loading {
+        border-color: var(--primary-color);
+        background-color: #e9f5ff;
+      }
+      .upload-area.success {
+        border-color: var(--accent-color);
+        background-color: #e6ffed;
+      }
+      .upload-area.error {
+        border-color: var(--error-color);
+        background-color: #ffe6e8;
+      }
+      .badge {
+        display: inline-block;
+        padding: .35em .65em;
+        font-size: .75em;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: .25rem;
+      }
+      .badge-success {
+        color: #fff;
+        background-color: var(--accent-color);
+      }
+      .badge-warning {
+        color: #212529;
+        background-color: #ffc107;
+      }
+      .btn {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: background-color 0.2s ease;
+        margin-right: 5px;
+      }
+      .btn:hover {
+        background-color: #0056b3;
+      }
+      .btn-secondary {
+        background-color: #6c757d;
+      }
+      .btn-secondary:hover {
+        background-color: #5a6268;
+      }
+      .btn-primary {
+        background-color: var(--primary-color);
+      }
+      .btn-success {
+        background-color: var(--accent-color);
+      }
+      .btn-warning {
+        background-color: #ffc107;
+      }
+      .btn-danger {
+        background-color: var(--error-color);
+      }
+      .btn:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
   </head>
 
   <body>
@@ -61,11 +215,17 @@
               </div>
             </div>
           </div>
-          <i class="fas fa-user-circle" style="font-size: 1.5rem"></i>
-          <button class="btn" onclick="abrirModalUsuario()">
+          <div class="user-info" id="userInfo">
+            <i class="fas fa-user-circle"></i>
+            <span id="userName">Invitado</span>
+            <div class="dropdown-menu">
+              <a href="#" id="logoutBtn">Cerrar Sesión</a>
+            </div>
+          </div>
+          <button class="btn" onclick="abrirModalUsuario()" id="loginBtn">
             Iniciar Sesion
           </button>
-          <button class="btn" onclick="abrirModalReg()">
+          <button class="btn" onclick="abrirModalReg()" id="registerBtn">
             Registrarse
           </button>
         </div>
@@ -161,6 +321,7 @@
           </div>
         </div>
       </div>
+
       <div id="actividades" class="tab-content">
         <div class="card">
           <div class="card-header">
@@ -735,6 +896,112 @@
     <script src="./modules/form.js"></script>
 
     <script src="app.js"></script>
+    <script>
+        // This function is responsible for populating the uploaded files table.
+        // It relies on `window.dataManager` (from modules/data.js) to get file data
+        // and `window.showAlert` (from modules/notification.js) for messages.
+        function updateUploadedFilesTable() {
+            const tableBody = document.getElementById('uploadedFilesTableBody');
+            // Ensure dataManager and tableBody exist before proceeding
+            if (!tableBody || typeof window.dataManager === 'undefined') {
+                console.warn('Cannot update files table: dataManager or tableBody not found.');
+                return;
+            }
 
+            // Clear existing rows
+            tableBody.innerHTML = '';
+
+            const files = window.dataManager.get('archivos'); // Use window.dataManager to get stored files
+            if (!files || files.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5">No hay documentos cargados.</td></tr>';
+                return;
+            }
+
+            files.forEach(file => {
+                const row = tableBody.insertRow();
+                let viewButtonHtml = '';
+
+                // Check for Excel file types to enable the view button
+                if (file.fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.fileType === 'application/vnd.ms-excel') {
+                    // Pass fileId and fileName to excel.html
+                    viewButtonHtml = `<button class="btn btn-secondary view-excel-btn" data-file-id="${file.id}" data-file-name="${encodeURIComponent(file.nombre)}" title="Ver documento"><i class="fas fa-eye"></i></button>`;
+                } else {
+                    // For other file types, disable the view button and add a title for explanation
+                    viewButtonHtml = `<button class="btn btn-secondary" disabled title="Solo archivos Excel son visualizables"><i class="fas fa-eye"></i></button>`;
+                }
+
+                row.innerHTML = `
+                    <td>${file.nombre}</td>
+                    <td>${file.tipo}</td>
+                    <td>${file.fecha}</td>
+                    <td><span class="badge badge-success">${file.estado}</span></td>
+                    <td>
+                        <button class="btn btn-secondary download-file-btn" data-file-id="${file.id}" data-file-name="${encodeURIComponent(file.nombre)}" data-file-type="${file.fileType}" title="Descargar documento"><i class="fas fa-download"></i></button>
+                        ${viewButtonHtml}
+                    </td>
+                `;
+            });
+
+            // Add event listeners to the new "View" buttons
+            document.querySelectorAll('.view-excel-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const fileId = this.getAttribute('data-file-id');
+                    const fileName = decodeURIComponent(this.getAttribute('data-file-name'));
+                    if (fileId) {
+                        // Open excel.html in a new tab, passing fileId and fileName
+                        window.open(`excel.html?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`, '_blank');
+                    }
+                });
+            });
+
+            // Add event listeners for download buttons
+            document.querySelectorAll('.download-file-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const fileId = this.getAttribute('data-file-id');
+                    const fileName = decodeURIComponent(this.getAttribute('data-file-name'));
+                    const fileType = this.getAttribute('data-file-type');
+                    const fileContent = sessionStorage.getItem(`fileContent_${fileId}`); // Content stored in sessionStorage
+
+                    if (fileContent) {
+                        try {
+                            const binary_string = atob(fileContent);
+                            const len = binary_string.length;
+                            const bytes = new Uint8Array(len);
+                            for (let i = 0; i < len; i++) {
+                                bytes[i] = binary_string.charCodeAt(i);
+                            }
+                            const blob = new Blob([bytes.buffer], { type: fileType });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = fileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url); // Clean up the URL object
+                            window.showAlert('Archivo descargado correctamente.', 'success'); // Use global showAlert
+                        } catch (error) {
+                            console.error("Error downloading file:", error);
+                            window.showAlert('Error al descargar el archivo.', 'error'); // Use global showAlert
+                        }
+                    } else {
+                        window.showAlert('No se encontró el contenido del archivo para descargar.', 'warning'); // Use global showAlert
+                    }
+                });
+            });
+        }
+
+        // Expose updateUploadedFilesTable globally if other scripts like app.js need to call it
+        window.updateUploadedFilesTable = updateUploadedFilesTable;
+
+        // Ensure file upload setup and table loading happens on DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.dataManager !== 'undefined') {
+                updateUploadedFilesTable();
+            } else {
+                console.warn('dataManager not found. File table will not be populated on load.');
+            }
+        });
+    </script>
   </body>
 </html>
