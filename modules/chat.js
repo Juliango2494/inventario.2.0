@@ -1,3 +1,5 @@
+// chat.js
+
 window.setupChat = function () {
   if (typeof window.GoogleGenerativeAI === "undefined") {
     import("https://esm.run/@google/generative-ai")
@@ -180,11 +182,9 @@ Proporciona una respuesta útil y específica relacionada con la gestión de pro
             );
           }
         } finally {
-          if (retries >= MAX_RETRIES || !chatInput.disabled) {
-            chatInput.disabled = false;
-            sendButton.disabled = false;
-            chatInput.focus();
-          }
+          chatInput.disabled = false;
+          sendButton.disabled = false;
+          chatInput.focus();
         }
       }
     }
