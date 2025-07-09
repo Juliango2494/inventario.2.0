@@ -1,5 +1,4 @@
 let notificationSystem, dataManager;
-
 /**
  * Inicializa la aplicación con manejo robusto de errores y dependencias
  */

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ObraSmart - Bienvenido</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --primary-color: #007bff;
+      --accent-color: #28a745;
+      --error-color: #dc3545;
+      --border: #ccc;
+      --text-secondary: #6c757d;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      background-color: #f4f4f4;
+    }
+
+    .left-panel {
+      width: 60%;
+      height: 100vh;
+      overflow-y: auto;
+      background: #007bff35;
+      padding: 40px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 60px;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .feature img {
+      width: 180px;
+      height: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+
+    .feature-text h3 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+
+    .feature-text p {
+      color: #444;
+      line-height: 1.4;
+    }
+
+    .auth-container {
+      width: 40%;
+      min-height: 100vh;
+      background: #fff;
+      border-left: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: sticky;
+      top: 0;
+      padding: 40px;
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .auth-box h2 {
+      text-align: center;
+      color: var(--primary-color);
+    }
+
+    .tabs {
+      display: flex;
+      margin-top: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      color: var(--text-secondary);
+    }
+
+    .tab.active {
+      color: var(--primary-color);
+      border-bottom: 3px solid var(--primary-color);
+    }
+
+    .form {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .form.active {
+      display: block;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .notification {
+      margin-top: 10px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .notification.success { color: var(--accent-color); }
+    .notification.error { color: var(--error-color); }
+  </style>
+</head>
+<body>
+
+  <!-- Panel izquierdo con contenido -->
+  <div class="left-panel">
+    <div class="feature">
+      <img src="assets/inventario.jpeg" alt="Inventario">
+      <div class="feature-text">
+        <h3>Gestión Real del Inventario</h3>
+        <p>Controla materiales, equipos, desperdicios y consumibles por centro de costos. Todo desde una sola app.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <img src="assets/presupuesto.jpg" alt="Presupuesto">
+      <div class="feature-text">
+        <h3>Presupuesto vs Realidad</h3>
+        <p>Visualiza y compara en tiempo real lo presupuestado frente al inventario consumido.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <img src="assets/cronograma.png" alt="Cronograma">
+      <div class="feature-text">
+        <h3>Integración con Cronograma</h3>
+        <p>Conecta los eventos del cronograma con el consumo e ingreso de materiales.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <img src="assets/gemini.png" alt="Gemini">
+      <div class="feature-text">
+        <h3>IA Asistida por Gemini</h3>
+        <p>La inteligencia artificial de Google Gemini te guía en la toma de decisiones inteligentes.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <img src="assets/notificaciones.webp" alt="Notificaciones">
+      <div class="feature-text">
+        <h3>Alertas Inteligentes</h3>
+        <p>Recibe notificaciones sobre compras necesarias, inventarios bajos y eventos importantes.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel derecho con login/registro -->
+  <div class="auth-container">
+    <div class="auth-box">
+      <h2>ObraSmart</h2>
+      <p class="notification" id="noti"></p>
+
+      <div class="tabs">
+        <div class="tab active" onclick="mostrarFormulario('login')">Iniciar Sesión</div>
+        <div class="tab" onclick="mostrarFormulario('registro')">Registrarse</div>
+      </div>
+
+      <div id="login" class="form active">
+        <input type="text" id="usuarioInput" placeholder="Usuario">
+        <input type="password" id="passwordInput" placeholder="Contraseña">
+        <button onclick="iniciarSesion()">Iniciar Sesión</button>
+      </div>
+
+      <div id="registro" class="form">
+        <input type="text" id="usuarioIn" placeholder="Usuario">
+        <input type="email" id="emailIn" placeholder="Correo electrónico">
+        <input type="password" id="passwordIn" placeholder="Contraseña (mínimo 6)">
+        <button onclick="registrar()">Registrarse</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Interfaz
+    function mostrarFormulario(id) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.form').forEach(f => f.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      event.target.classList.add('active');
+      document.getElementById('noti').textContent = '';
+    }
+
+    // Notificaciones
+    function showAppNotification(message, type) {
+      const noti = document.getElementById('noti');
+      noti.textContent = message;
+      noti.className = 'notification ' + type;
+    }
+
+    // Hash SHA-256
+    async function hashString(str) {
+      const data = new TextEncoder().encode(str);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Registro
+    async function registrar() {
+      const usuario = document.getElementById('usuarioIn').value.trim();
+      const email = document.getElementById('emailIn').value.trim();
+      const password = document.getElementById('passwordIn').value.trim();
+
+      if (!usuario || !email || !password) {
+        showAppNotification('Complete todos los campos', 'error');
+        return;
+      }
+
+      const emailRegex = /\S+@\S+\.\S+/;
+      if (!emailRegex.test(email)) {
+        showAppNotification('Correo inválido', 'error');
+        return;
+      }
+
+      if (password.length < 6) {
+        showAppNotification('Contraseña muy corta', 'error');
+        return;
+      }
+
+      const hashed = await hashString(password);
+      localStorage.setItem('username', usuario);
+      localStorage.setItem('password', hashed);
+      localStorage.setItem('email', email);
+
+      showAppNotification('Registrado correctamente', 'success');
+      document.getElementById('usuarioIn').value = '';
+      document.getElementById('emailIn').value = '';
+      document.getElementById('passwordIn').value = '';
+
+      setTimeout(() => mostrarFormulario('login'), 1000);
+    }
+
+    // Login
+    async function iniciarSesion() {
+      const usuario = document.getElementById('usuarioInput').value.trim();
+      const password = document.getElementById('passwordInput').value.trim();
+
+      if (!usuario || !password) {
+        showAppNotification('Complete todos los campos', 'error');
+        return;
+      }
+
+      const storedUser = localStorage.getItem('username');
+      const storedHash = localStorage.getItem('password');
+      const enteredHash = await hashString(password);
+
+      if (usuario === storedUser && enteredHash === storedHash) {
+        showAppNotification('Sesión iniciada', 'success');
+        setTimeout(() => window.location.href = 'index.html', 1200);
+      } else {
+        showAppNotification('Credenciales incorrectas', 'error');
+      }
+    }
+  </script>
+</body>
+</html>
