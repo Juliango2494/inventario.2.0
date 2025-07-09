@@ -239,16 +239,7 @@
         <div class="user-info" id="userInfo">
           <i class="fas fa-user-circle"></i>
           <span id="userName">Invitado</span>
-          <div class="dropdown-menu">
-            <a href="#" id="logoutBtn">Cerrar Sesión</a>
-          </div>
         </div>
-        <button class="btn" onclick="abrirModalUsuario()" id="loginBtn">
-          Iniciar Sesion
-        </button>
-        <button class="btn" onclick="abrirModalReg()" id="registerBtn">
-          Registrarse
-        </button>
       </div>
     </div>
   </header>
@@ -820,42 +811,7 @@
         </button>
       </div>
     </div>
-    <div id="modalUsr" class="modalUsuario">
-      <div class="modal-usuario-content">
-        <p class="titulo-modal">INICIO DE SESION</p>
-        <p>Usuario</p>
-        <input type="text" id="usuarioInput" placeholder="Ingrese su usuario" />
-        <p>Contraseña</p>
-        <input type="password" id="passwordInput" placeholder="Ingrese su contraseña" />
-        <div>
-          <button class="btn btn-primary" onclick="iniciarSesion()">
-            Iniciar Sesión
-          </button>
-          <button class="btn close-btn-modal" onclick="cerrarModalUsuario()">
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
-    <div id="modalReg" class="modalUsuario">
-      <div class="modal-usuario-content">
-        <p class="titulo-modal">Registrarse</p>
-        <p>Email</p>
-        <input type="email" id="emailIn" placeholder="Ingrese su email" />
-        <p>Usuario</p>
-        <input type="text" id="usuarioIn" placeholder="Ingrese su usuario" />
-        <p>Contraseña</p>
-        <input type="password" id="passwordIn" placeholder="Ingrese su contraseña" />
-        <div>
-          <button class="btn btn-primary" onclick="registrar()">
-            Registrarse
-          </button>
-          <button class="btn close-btn-modal" onclick="cerrarModalReg()">
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
+    
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
