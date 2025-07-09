@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ObraSmart - Gestión Inteligente de Inventario</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+  <style>
+    /* New styles for the upload and files table sections */
+    body {
+      --primary-color: #007bff;
+      --accent-color: #28a745;
+      --error-color: #dc3545;
+      --border: #ccc;
+      --text-secondary: #6c757d;
+    }
+
+    .upload-section {
+      margin-bottom: 30px;
+    }
+
+    .upload-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .upload-area {
+      flex: 1;
+      min-width: 280px;
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-area:hover,
+    .upload-area.dragover {
+      border-color: var(--primary-color);
+      background-color: #e9f5ff;
+    }
+
+    .upload-area input[type="file"] {
+      display: none;
+    }
+
+    .upload-icon {
+      font-size: 3em;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      transition: color 0.3s ease;
+    }
+
+    .upload-area p {
+      margin: 0;
+      color: #555;
+      font-size: 0.9em;
+    }
+
+    .upload-feedback {
+      font-size: 0.8em;
+      margin-top: 10px;
+      padding: 5px;
+      border-radius: 4px;
+      visibility: hidden;
+      opacity: 0;
+      transition: all 0.3s ease;
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .upload-feedback.success {
+      background-color: #d4edda;
+      color: #155724;
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .upload-feedback.error {
+      background-color: #f8d7da;
+      color: #721c24;
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .upload-feedback.info {
+      background-color: #d1ecf1;
+      color: #0c5460;
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .upload-area.loading {
+      border-color: var(--primary-color);
+      background-color: #e9f5ff;
+    }
+
+    .upload-area.success {
+      border-color: var(--accent-color);
+      background-color: #e6ffed;
+    }
+
+    .upload-area.error {
+      border-color: var(--error-color);
+      background-color: #ffe6e8;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: .35em .65em;
+      font-size: .75em;
+      font-weight: 700;
+      line-height: 1;
+      text-align: center;
+      white-space: nowrap;
+      vertical-align: baseline;
+      border-radius: .25rem;
+    }
+
+    .badge-success {
+      color: #fff;
+      background-color: var(--accent-color);
+    }
+
+    .badge-warning {
+      color: #212529;
+      background-color: #ffc107;
+    }
+
+    .btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: background-color 0.2s ease;
+      margin-right: 5px;
+    }
+
+    .btn:hover {
+      background-color: #0056b3;
+    }
+
+    .btn-secondary {
+      background-color: #6c757d;
+    }
+
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+    }
+
+    .btn-success {
+      background-color: var(--accent-color);
+    }
+
+    .btn-warning {
+      background-color: #ffc107;
+    }
+
+    .btn-danger {
+      background-color: var(--error-color);
+    }
+
+    .btn:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <i class="fas fa-hard-hat"></i>
+        ObraSmart
+      </div>
+      <div class="user-menu">
+        <div class="notification-container">
+          <div class="notification-badge" id="notificationBadge">
+            <i class="fas fa-bell"></i>
+            <div class="notification-count" id="notificationCount">3</div>
+          </div>
+
+          <div class="notification-panel" id="notificationPanel">
+            <div class="notification-header">
+              <div class="notification-title">Notificaciones</div>
+              <div class="notification-actions">
+                <button class="btn-icon" id="markAllRead" title="Marcar todas como leídas">
+                  <i class="fas fa-check-double"></i>
+                </button>
+                <button class="btn-icon" id="clearAll" title="Limpiar todas">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="notification-filters">
+              <div class="filter-chip active" data-filter="all">Todas</div>
+              <div class="filter-chip" data-filter="unread">Sin leer</div>
+              <div class="filter-chip" data-filter="success">Éxito</div>
+              <div class="filter-chip" data-filter="warning">
+                Advertencias
+              </div>
+              <div class="filter-chip" data-filter="error">Errores</div>
+            </div>
+
+            <div class="notification-list" id="notificationList"></div>
+
+            <div class="notification-footer">
+              <button class="btn-link" id="viewHistory">
+                Ver historial completo
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="user-info" id="userInfo">
+          <i class="fas fa-user-circle"></i>
+          <span id="userName">Invitado</span>
+          <div class="dropdown-menu">
+            <a href="#" id="logoutBtn">Cerrar Sesión</a>
+          </div>
+        </div>
+        <button class="btn" onclick="abrirModalUsuario()" id="loginBtn">
+          Iniciar Sesion
+        </button>
+        <button class="btn" onclick="abrirModalReg()" id="registerBtn">
+          Registrarse
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav-container">
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="inicio">
+        <i class="fas fa-home"></i>
+        Inicio
+      </button>
+      <button class="nav-tab" data-tab="obras">
+        <i class="fas fa-building"></i>
+        Obras
+      </button>
+      <button class="nav-tab" data-tab="materiales">
+        <i class="fas fa-boxes"></i>
+        Materiales
+      </button>
+      <button class="nav-tab" data-tab="archivos">
+        <i class="fas fa-file-upload"></i>
+        Carga de Archivos
+      </button>
+      <button class="nav-tab" data-tab="ia">
+        <i class="fas fa-brain"></i>
+        IA - Gemini
+      </button>
+      <button class="nav-tab" data-tab="calendario">
+        <i class="fas fa-calendar"></i>
+        Calendario
+      </button>
+      <button class="nav-tab" data-tab="actividades">
+        <i class="fas fa-tasks"></i>
+        Actividades
+      </button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <div id="inicio" class="tab-content active">
+      <div class="welcome-section">
+        <h1 class="welcome-title">Bienvenido a ObraSmart</h1>
+        <p class="welcome-subtitle">
+          Gestiona tus obras de construcción de manera inteligente con nuestra
+          aplicación integrada con IA
+        </p>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-number">5</div>
+          <div class="stat-label">Obras Activas</div>
+        </div>
+        <div class="stat-card secondary">
+          <div class="stat-number">247</div>
+          <div class="stat-label">Materiales Registrados</div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-number">12</div>
+          <div class="stat-label">Alertas Pendientes</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-tachometer-alt"></i>
+            Acciones Rápidas
+          </h2>
+        </div>
+        <div class="quick-actions">
+          <div class="quick-action" data-action="nueva-obra">
+            <i class="fas fa-plus-circle"></i>
+            <h3>Nueva Obra</h3>
+            <p>Registrar una nueva obra</p>
+          </div>
+          <div class="quick-action" data-action="agregar-material">
+            <i class="fas fa-box"></i>
+            <h3>Agregar Material</h3>
+            <p>Añadir nuevo material</p>
+          </div>
+          <div class="quick-action" data-action="consultar-ia">
+            <i class="fas fa-robot"></i>
+            <h3>Consultar IA</h3>
+            <p>Obtener recomendaciones</p>
+          </div>
+          <div class="quick-action" data-action="cargar-archivo">
+            <i class="fas fa-upload"></i>
+            <h3>Cargar Archivo</h3>
+            <p>Subir presupuesto/cronograma</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="actividades" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-tasks"></i>
+            Gestión de Actividades
+          </h2>
+          <button class="btn btn-primary" id="actividad-submit">
+            <i class="fas fa-plus"></i>
+            Nueva Actividad
+          </button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Obra</label>
+            <select class="form-input" id="obra-select">
+              <option value="">Seleccionar obra</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre de la Actividad</label>
+            <input type="text" class="form-input" id="nombre-actividad" placeholder="Ej. Excavación" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de Inicio</label>
+            <input type="date" class="form-input" id="fecha-inicio-actividad" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de Fin</label>
+            <input type="date" class="form-input" id="fecha-fin-actividad" />
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Obra</th>
+                <th>Actividad</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Fin</th>
+                <th>Progreso</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <td>
+                <button class="btn btn-secondary view-gantt" data-obra="OB-001">
+                  <i class="fas fa-chart-gantt"></i> Gantt
+                </button>
+                <button class="btn btn-secondary">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button class="btn btn-secondary">
+                  <i class="fas fa-edit"></i>
+                </button>
+              </td>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="obras" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-building"></i>
+            Gestión de Obras
+          </h2>
+          <button class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Nueva Obra
+          </button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Código de Obra</label>
+            <input type="text" class="form-input" placeholder="OB-001" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre de la Obra</label>
+            <input type="text" class="form-input" placeholder="Torre Residencial Central" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Objeto del Contrato</label>
+            <input type="text" class="form-input" placeholder="Construcción edificio residencial" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Valor del Contrato</label>
+            <input type="number" class="form-input" placeholder="500000000" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Duración (días)</label>
+            <input type="number" class="form-input" placeholder="365" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fecha de Inicio</label>
+            <input type="date" class="form-input" />
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Valor</th>
+                <th>Progreso</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>OB-001</td>
+                <td>Torre Residencial Central</td>
+                <td>$500,000,000</td>
+                <td>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: 45%"></div>
+                  </div>
+                  45%
+                </td>
+                <td><span class="badge badge-success">Activa</span></td>
+                <td>
+                  <button class="btn btn-secondary">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn btn-secondary">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>OB-002</td>
+                <td>Centro Comercial Norte</td>
+                <td>$750,000,000</td>
+                <td>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width: 78%"></div>
+                  </div>
+                  78%
+                </td>
+                <td><span class="badge badge-success">Activa</span></td>
+                <td>
+                  <button class="btn btn-secondary">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn btn-secondary">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="materiales" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-boxes"></i>
+            Gestión de Materiales
+          </h2>
+          <button class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Nuevo Material
+          </button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Código</label>
+            <input type="text" class="form-input" placeholder="MAT-001" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre del Material</label>
+            <input type="text" class="form-input" placeholder="Cemento Portland" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Unidad de Medida</label>
+            <select class="form-input">
+              <option>Seleccionar unidad</option>
+              <option>kg</option>
+              <option>m³</option>
+              <option>m²</option>
+              <option>unidad</option>
+              <option>litro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Precio Unitario</label>
+            <input type="number" class="form-input" placeholder="25000" />
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Unidad</th>
+                <th>Precio Unitario</th>
+                <th>Stock</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>MAT-001</td>
+                <td>Cemento Portland</td>
+                <td>kg</td>
+                <td>$25,000</td>
+                <td>500 kg</td>
+                <td>
+                  <button class="btn btn-secondary">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-secondary">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <tr>
+                <td>MAT-002</td>
+                <td>Varilla #4</td>
+                <td>unidad</td>
+                <td>$15,000</td>
+                <td>200 und</td>
+                <td>
+                  <button class="btn btn-secondary">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-secondary">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="archivos" class="tab-content">
+      <div class="upload-section">
+        <h3>Cargar Archivos de Proyecto</h3>
+        <p class="description">
+          Sube tus archivos de proyecto aquí. Se admiten formatos PDF, DOCX, XLSX y JPG, con un tamaño máximo de 5MB por
+          archivo.
+        </p>
+        <div class="upload-grid">
+          <div class="upload-area" id="presupuesto-upload">
+            <input type="file" id="fileInputPresupuesto" accept=".xlsx,.xls" />
+            <i class="fas fa-file-excel upload-icon"></i>
+            <p>Arrastra tu presupuesto o haz clic para subir</p>
+            <small>(Solo archivos .xlsx, .xls - máx 5MB)</small>
+            <div class="upload-feedback" id="feedbackPresupuesto"></div>
+          </div>
+          <div class="upload-area" id="programacion-upload">
+            <input type="file" id="fileInputProgramacion" accept=".pdf,.docx" />
+            <i class="fas fa-file-alt upload-icon"></i>
+            <p>Arrastra tu programación o haz clic para subir</p>
+            <small>(Solo archivos .pdf, .docx - máx 5MB)</small>
+            <div class="upload-feedback" id="feedbackProgramacion"></div>
+          </div>
+          <div class="upload-area" id="documento-upload">
+            <input type="file" id="fileInputDocumento" accept=".pdf,.docx,.xlsx,.xls,.jpg" />
+            <i class="fas fa-folder-open upload-icon"></i>
+            <p>Arrastra otros documentos o haz clic para subir</p>
+            <small>(PDF, DOCX, XLSX, JPG - máx 5MB)</small>
+            <div class="upload-feedback" id="feedbackDocumento"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="excel-analysis-container">
+        <h2>Análisis de Obra de Construcción</h2>
+        <p class="description">
+          Sube un archivo Excel simple con información de tu proyecto de
+          construcción y la Inteligencia Artificial de Gemini lo analizará
+          para ti.
+        </p>
+
+        <div class="file-input-group">
+          <label for="excelFileForAnalysis">Selecciona tu archivo Excel (.xlsx o .xls):</label>
+          <input type="file" id="excelFileForAnalysis" accept=".xls,.xlsx" />
+        </div>
+
+        <button onclick="analyzeExcel()">Analizar Archivo Excel</button>
+
+        <div id="excelLoadingMessage" class="loading hidden">
+          Leyendo y analizando el Excel con Gemini AI... por favor, espera un
+          momento.
+        </div>
+        <div id="excelAnalysisResult" class="hidden"></div>
+      </div>
+      <div class="card" style="margin-top: 25px">
+        <h3>Archivos Cargados Recientemente (General)</h3>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nombre del Archivo</th>
+                <th>Tipo</th>
+                <th>Fecha de Carga</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="uploadedFilesTableBody">
+              <tr>
+                <td>presupuesto_torre_central.xlsx</td>
+                <td>Presupuesto</td>
+                <td>2025-06-08</td>
+                <td><span class="badge badge-success">Procesado</span></td>
+                <td>
+                  <button class="btn btn-secondary">
+                    <i class="fas fa-download"></i>
+                  </button>
+                  <button class="btn btn-secondary">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="ia" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-brain"></i>
+            Asistente IA - Gemini
+          </h2>
+        </div>
+
+        <div class="form-grid">
+          <div class="card">
+            <h3>Análisis de Presupuesto</h3>
+            <p>
+              La IA analizará tu presupuesto y detectará posibles
+              inconsistencias o mejoras.
+            </p>
+            <button class="btn btn-primary">
+              <i class="fas fa-chart-line"></i>
+              Analizar Presupuesto
+            </button>
+          </div>
+
+          <div class="card">
+            <h3>Asistente de Logística</h3>
+            <p>
+              Obtén recomendaciones sobre pedidos y gestión de materiales.
+            </p>
+            <button class="btn btn-success">
+              <i class="fas fa-truck"></i>
+              Consultar Logística
+            </button>
+          </div>
+
+          <div class="card">
+            <h3>Análisis de Riesgos</h3>
+            <p>Identifica posibles riesgos en la programación de tu obra.</p>
+            <button class="btn btn-warning">
+              <i class="fas fa-exclamation-triangle"></i>
+              Analizar Riesgos
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Chat con IA</h3>
+          <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+              <div style="
+                    padding: 1rem;
+                    text-align: center;
+                    color: var(--text-secondary);
+                  ">
+                ¡Hola! Soy tu asistente de IA. Puedo ayudarte con análisis de
+                presupuestos, recomendaciones de materiales, optimización de
+                cronogramas y mucho más. ¿En qué puedo ayudarte hoy?
+              </div>
+            </div>
+            <div class="chat-input-container">
+              <input type="text" class="form-input chat-input" placeholder="Escribe tu consulta aquí..."
+                id="chatInput" />
+              <button class="btn btn-primary" id="sendChat">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="calendario" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="fas fa-calendar"></i>
+            Calendario de Obras
+          </h2>
+          <div>
+            <button class="btn btn-secondary" id="prevMonth">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span id="currentMonth" style="margin: 0 1rem; font-weight: bold">
+              Junio 2025
+            </span>
+            <button class="btn btn-secondary" id="nextMonth">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid"></div>
+
+        <div class="card" style="margin-top: 1.5rem">
+          <h3>Eventos Próximos</h3>
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Evento</th>
+                  <th>Obra</th>
+                  <th>Tipo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>12 Jun 2025</td>
+                  <td>Entrega de materiales</td>
+                  <td>Torre Residencial</td>
+                  <td><span class="badge badge-success">Entrega</span></td>
+                </tr>
+                <tr>
+                  <td>15 Jun 2025</td>
+                  <td>Revisión de calidad</td>
+                  <td>Centro Comercial</td>
+                  <td><span class="badge badge-warning">Inspección</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="demo-container">
+      <h2>Demo - Sistema de Notificaciones</h2>
+      <div class="demo-actions">
+        <button class="btn btn-success" onclick="addNotification('success')">
+          <i class="fas fa-check"></i> Agregar Éxito
+        </button>
+        <button class="btn btn-warning" onclick="addNotification('warning')">
+          <i class="fas fa-exclamation-triangle"></i> Agregar Advertencia
+        </button>
+        <button class="btn btn-danger" onclick="addNotification('error')">
+          <i class="fas fa-times"></i> Agregar Error
+        </button>
+        <button class="btn btn-primary" onclick="addNotification('info')">
+          <i class="fas fa-info"></i> Agregar Info
+        </button>
+      </div>
+    </div>
+    <div id="modalUsr" class="modalUsuario">
+      <div class="modal-usuario-content">
+        <p class="titulo-modal">INICIO DE SESION</p>
+        <p>Usuario</p>
+        <input type="text" id="usuarioInput" placeholder="Ingrese su usuario" />
+        <p>Contraseña</p>
+        <input type="password" id="passwordInput" placeholder="Ingrese su contraseña" />
+        <div>
+          <button class="btn btn-primary" onclick="iniciarSesion()">
+            Iniciar Sesión
+          </button>
+          <button class="btn close-btn-modal" onclick="cerrarModalUsuario()">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="modalReg" class="modalUsuario">
+      <div class="modal-usuario-content">
+        <p class="titulo-modal">Registrarse</p>
+        <p>Email</p>
+        <input type="email" id="emailIn" placeholder="Ingrese su email" />
+        <p>Usuario</p>
+        <input type="text" id="usuarioIn" placeholder="Ingrese su usuario" />
+        <p>Contraseña</p>
+        <input type="password" id="passwordIn" placeholder="Ingrese su contraseña" />
+        <div>
+          <button class="btn btn-primary" onclick="registrar()">
+            Registrarse
+          </button>
+          <button class="btn close-btn-modal" onclick="cerrarModalReg()">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <script type="module" src="https://esm.run/@google/generative-ai"></script>
+  <script type="module" src="./modules/excelAnalysis.js"></script>
+  <script src="./modules/data.js"></script>
+  <script src="./modules/notification.js"></script>
+
+  <script src="./modules/gantt.js"></script>
+  <script src="./modules/uploadFile.js"></script>
+  <script src="./modules/auth.js"></script>
+  <script src="./modules/calendar.js"></script>
+  <script src="./modules/chat.js"></script>
+  <script src="./modules/form.js"></script>
+
+  <script>
+    const user = localStorage.getItem('username');
+    if (!user) {
+      window.location.href = 'welcome.html';
+    }
+  </script>
+
+  <script src="app.js"></script>
+  <script>
+    // This function is responsible for populating the uploaded files table.
+    // It relies on `window.dataManager` (from modules/data.js) to get file data
+    // and `window.showAlert` (from modules/notification.js) for messages.
+    function updateUploadedFilesTable() {
+      const tableBody = document.getElementById('uploadedFilesTableBody');
+      // Ensure dataManager and tableBody exist before proceeding
+      if (!tableBody || typeof window.dataManager === 'undefined') {
+        console.warn('Cannot update files table: dataManager or tableBody not found.');
+        return;
+      }
+
+      // Clear existing rows
+      tableBody.innerHTML = '';
+
+      const files = window.dataManager.get('archivos'); // Use window.dataManager to get stored files
+      if (!files || files.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="5">No hay documentos cargados.</td></tr>';
+        return;
+      }
+
+      files.forEach(file => {
+        const row = tableBody.insertRow();
+        let viewButtonHtml = '';
+
+        // Check for Excel file types to enable the view button
+        if (file.fileType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || file.fileType === 'application/vnd.ms-excel') {
+          // Pass fileId and fileName to excel.html
+          viewButtonHtml = `<button class="btn btn-secondary view-excel-btn" data-file-id="${file.id}" data-file-name="${encodeURIComponent(file.nombre)}" title="Ver documento"><i class="fas fa-eye"></i></button>`;
+        } else {
+          // For other file types, disable the view button and add a title for explanation
+          viewButtonHtml = `<button class="btn btn-secondary" disabled title="Solo archivos Excel son visualizables"><i class="fas fa-eye"></i></button>`;
+        }
+
+        row.innerHTML = `
+                    <td>${file.nombre}</td>
+                    <td>${file.tipo}</td>
+                    <td>${file.fecha}</td>
+                    <td><span class="badge badge-success">${file.estado}</span></td>
+                    <td>
+                        <button class="btn btn-secondary download-file-btn" data-file-id="${file.id}" data-file-name="${encodeURIComponent(file.nombre)}" data-file-type="${file.fileType}" title="Descargar documento"><i class="fas fa-download"></i></button>
+                        ${viewButtonHtml}
+                    </td>
+                `;
+      });
+
+      // Add event listeners to the new "View" buttons
+      document.querySelectorAll('.view-excel-btn').forEach(button => {
+        button.addEventListener('click', function () {
+          const fileId = this.getAttribute('data-file-id');
+          const fileName = decodeURIComponent(this.getAttribute('data-file-name'));
+          if (fileId) {
+            // Open excel.html in a new tab, passing fileId and fileName
+            window.open(`excel.html?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`, '_blank');
+          }
+        });
+      });
+
+      // Add event listeners for download buttons
+      document.querySelectorAll('.download-file-btn').forEach(button => {
+        button.addEventListener('click', function () {
+          const fileId = this.getAttribute('data-file-id');
+          const fileName = decodeURIComponent(this.getAttribute('data-file-name'));
+          const fileType = this.getAttribute('data-file-type');
+          const fileContent = sessionStorage.getItem(`fileContent_${fileId}`); // Content stored in sessionStorage
+
+          if (fileContent) {
+            try {
+              const binary_string = atob(fileContent);
+              const len = binary_string.length;
+              const bytes = new Uint8Array(len);
+              for (let i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+              }
+              const blob = new Blob([bytes.buffer], { type: fileType });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = fileName;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url); // Clean up the URL object
+              window.showAlert('Archivo descargado correctamente.', 'success'); // Use global showAlert
+            } catch (error) {
+              console.error("Error downloading file:", error);
+              window.showAlert('Error al descargar el archivo.', 'error'); // Use global showAlert
+            }
+          } else {
+            window.showAlert('No se encontró el contenido del archivo para descargar.', 'warning'); // Use global showAlert
+          }
+        });
+      });
+    }
+
+    // Expose updateUploadedFilesTable globally if other scripts like app.js need to call it
+    window.updateUploadedFilesTable = updateUploadedFilesTable;
+
+    // Ensure file upload setup and table loading happens on DOMContentLoaded
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof window.dataManager !== 'undefined') {
+        updateUploadedFilesTable();
+      } else {
+        console.warn('dataManager not found. File table will not be populated on load.');
+      }
+    });
+  </script>
+</body>
+
+</html>
